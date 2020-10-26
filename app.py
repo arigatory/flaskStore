@@ -19,6 +19,11 @@ migrate = Migrate(app, db)
 
 
 class LoginForm(FlaskForm):
+    email = StringField("Email:", validators=[DataRequired(), Email()])
+    password = PasswordField("Пароль:", validators=[DataRequired()])
+
+
+class RegisterForm(FlaskForm):
     username = StringField("Имя:", validators=[DataRequired()])
     email = StringField("Email:", validators=[DataRequired(), Email()])
     password = PasswordField("Пароль:", validators=[DataRequired()])
@@ -53,17 +58,21 @@ def render_account():
 
 @app.route('/register/', methods=["GET", "POST"])
 def render_register():
-    form = LoginForm()
+    error_msg = ""
+    form = RegisterForm()
     if request.method == "POST":
-        if not form.validate_on_submit():
-            return render_template("register.html", form=form)
-        user = User.query.filter(User.name == form.username.data).first()
-        if not user or user.password != form.password.data:
-            form.username.errors.append("Неверное имя или пароль")
-        else:
-            session["user_id"] = user.id
-            return redirect("/")
-    return render_template("register.html",form=form)
+        username = request.form.get("username")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        print('hey')
+        if not username or not password or not email:
+            error_msg = "Не все поля заполнены"
+            return render_template("register.html", form=form, error_msg=error_msg)
+        user = User(name=username, email=email, password=password)
+        db.session.add(user)
+        db.session.commit()
+        return f"{user.name}: Успешная регистрация"
+    return render_template("register.html", form=form, error_mst=error_msg)
 
 
 @app.route('/login/', methods=["GET", "POST"])
