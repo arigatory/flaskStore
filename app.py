@@ -1,21 +1,23 @@
 from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, session, redirect, request, url_for
-import os
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
 from wtforms.validators import DataRequired, Length, EqualTo, Email
+from config import Config
+from models import db, User
 
 app = Flask(__name__)
-app.secret_key = "randomstring"
-app.config['USERNAME'] = "a@a.a"
-app.config['PASSWORD'] = "a@a.a"
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-
-db = SQLAlchemy(app)
+app.config.from_object(Config)
+db.init_app(app)
 migrate = Migrate(app, db)
+
+print('app has been run')
+
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
+    db.init_app(app)
+    return app
 
 
 class LoginForm(FlaskForm):
@@ -27,14 +29,6 @@ class RegisterForm(FlaskForm):
     username = StringField("Имя:", validators=[DataRequired()])
     email = StringField("Email:", validators=[DataRequired(), Email()])
     password = PasswordField("Пароль:", validators=[DataRequired()])
-
-
-class User(db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(32), nullable=False, unique=True)
-    password = db.Column(db.String(32), nullable=False)
-    email = db.Column(db.String(32), nullable=False)
 
 
 @app.route('/')
@@ -136,6 +130,7 @@ def dark_off():
 @app.route('/auth/')
 def auth():
     return render_template('auth.html')
+
 
 if __name__ == '__main__':
     app.run()
