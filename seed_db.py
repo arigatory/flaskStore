@@ -1,8 +1,7 @@
 from models import Category, Meal
 import csv
 from app import create_app, db
-import config
-import os
+
 
 app = create_app()
 app.app_context().push()

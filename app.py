@@ -1,34 +1,21 @@
 from flask_migrate import Migrate
 from flask import Flask, render_template, session, redirect, request, url_for
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField
-from wtforms.validators import DataRequired, Length, EqualTo, Email
 from config import Config
-from models import db, User
-
-app = Flask(__name__)
-app.config.from_object(Config)
-db.init_app(app)
-migrate = Migrate(app, db)
+from models import db, User, Category, Meal
+from forms import LoginForm, RegisterForm, OrderForm
 
 print('app has been run')
 
+
 def create_app():
-    app = Flask(__name__)
-    app.config.from_object(Config)
-    db.init_app(app)
-    return app
+    res = Flask(__name__)
+    res.config.from_object(Config)
+    db.init_app(res)
+    return res
 
 
-class LoginForm(FlaskForm):
-    email = StringField("Email:", validators=[DataRequired(), Email()])
-    password = PasswordField("Пароль:", validators=[DataRequired()])
-
-
-class RegisterForm(FlaskForm):
-    username = StringField("Имя:", validators=[DataRequired()])
-    email = StringField("Email:", validators=[DataRequired(), Email()])
-    password = PasswordField("Пароль:", validators=[DataRequired()])
+app = create_app()
+migrate = Migrate(app, db)
 
 
 @app.route('/')
@@ -37,12 +24,24 @@ def render_main():
     if not session.get('user_id'):
         print('not is user_id!')
         return redirect('/login/')
-    return render_template("main.html")
+    categories = db.session.query(Category).all()
+    meals = db.session.query(Meal).filter(Meal.category_id == 1).limit(3).all()
+    food = {}
+    for c in categories:
+        food[c.title] = db.session.query(Meal).filter(Meal.category_id == c.id).limit(3).all()
+    return render_template("main.html", categories=categories, meals=meals, food=food)
 
 
 @app.route('/cart/')
 def render_cart():
-    return render_template("cart.html")
+    form = OrderForm()
+    return render_template("cart.html", form=form)
+
+
+@app.route('/addtocart/<int:id>/')
+def render_add_to_cart(id):
+    session["cart"] = id
+    return redirect("/cart/")
 
 
 @app.route('/account/')
@@ -116,15 +115,15 @@ def reset_cart():
 @app.route('/dark/')
 def dark_on():
     session['dark'] = True
-    return '<body bgcolor={}><a href="/">INDEX</a><a href="/dark">Темную вкл</a><br><a href="/white">Темную выкл</a></body>'.format(
-        '#000' if session['dark'] else '#fff')
+    return '<body bgcolor={}><a href="/">INDEX</a><a href="/dark">Темную вкл</a><br><a href="/white">Темную ' \
+           'выкл</a></body>'.format('#000' if session['dark'] else '#fff')
 
 
 @app.route('/white/')
 def dark_off():
     session['dark'] = False
-    return '<body bgcolor={}><a href="/">INDEX</a><a href="/dark">Темную вкл</a><br><a href="/white">Темную выкл</a></body>'.format(
-        '#000' if session['dark'] else '#fff')
+    return '<body bgcolor={}><a href="/">INDEX</a><a href="/dark">Темную вкл</a><br><a href="/white">Темную ' \
+           'выкл</a></body>'.format('#000' if session['dark'] else '#fff')
 
 
 @app.route('/auth/')
