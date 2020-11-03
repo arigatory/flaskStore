@@ -35,12 +35,22 @@ def render_main():
 @app.route('/cart/')
 def render_cart():
     form = OrderForm()
-    return render_template("cart.html", form=form)
+    return render_template("cart.html", form=form, items=session.get("cart",[]))
 
 
 @app.route('/addtocart/<int:id>/')
 def render_add_to_cart(id):
-    session["cart"] = id
+    cart = session.get("cart", [])
+    cart.append(id)
+    session["cart"] = cart
+    return redirect("/cart/")
+
+
+@app.route('/deletefromcart/<int:id>/')
+def render_delete_from_cart(id):
+    cart = session.get("cart", [])
+    cart.remove(id)
+    session["cart"] = cart
     return redirect("/cart/")
 
 
