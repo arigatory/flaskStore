@@ -4,13 +4,13 @@
   {% include 'menu.html' %}
   <main class="container">
     <h1 class="h3 my-4">Корзина</h1>
-
-    <div class="alert alert-warning" role="alert">Блюдо удалено из корзины</div>
-    <div class="alert alert-warning" role="alert">Чтобы сделать заказ – <a href="/login.html">войдите</a> или <a href="/register.html">зарегистрируйтесь</a></div>
-
+    {% if deleted %}
+        <div class="alert alert-warning" role="alert">Блюдо удалено из корзины</div>
+    {% endif %}
+    {% if not authorised %}
+        <div class="alert alert-warning" role="alert">Чтобы сделать заказ – <a href="/login.html">войдите</a> или <a href="/register.html">зарегистрируйтесь</a></div>
+    {% endif %}
     <div class="row mt-5">
-
-
         <div class="col-4">
           <form action="/cart/" method="POST">
           <h4 class="">Ваши данные</h4>
@@ -48,43 +48,22 @@
 
       <div class="col-1"></div>
       <div class="col-7">
-        <h4 class="mb-3 col-7 mb-5">3 блюда в корзине</h4>
+        <h4 class="mb-3 col-7 mb-5">{{ cart|length }} блюда в корзине</h4>
         <table class="table">
           <tbody>
+          {% for id,item in cart.items() %}
             <tr>
-              <th scope="row">Ролл "Хомский"</th>
+              <th scope="row">Тест {{ item.title }}</th>
               <td></td>
               <td>1</td>
-              <td>315</td>
-              <td><a class="text-danger" href="#">Удалить</a></td>
-            </tr>
-            <tr>
-              <th scope="row">Бургер 404</th>
-              <td></td>
-              <td>1</td>
-              <td>250</td>
-              <td><a class="text-danger" href="#">Удалить</a></td>
-            </tr>
-            <tr>
-              <th scope="row">Пица "Армин"</th>
-              <td></td>
-              <td>1</td>
-              <td>310</td>
-              <td><a class="text-danger" href="#">Удалить</a></td>
-            </tr>
-          {% for i in items %}
-            <tr>
-              <th scope="row">Тест {{ i }}</th>
-              <td></td>
-              <td>1</td>
-              <td>999</td>
-              <td><a class="text-danger" href="/deletefromcart/{{ i }}/">Удалить</a></td>
+              <td>{{ item.price }}</td>
+              <td><a class="text-danger" href="/deletefromcart/{{ id }}/">Удалить</a></td>
             </tr>
           {% endfor %}
           </tbody>
         </table>
         <hr>
-        <p class="display-4 my-2 ">875 руб</p>
+        <p class="display-4 my-2 ">{{ cart.values() | sum(attribute='price') }} руб</p>
       </div>
     </div>
   </main>

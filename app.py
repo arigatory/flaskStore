@@ -29,29 +29,30 @@ def render_main():
     food = {}
     for c in categories:
         food[c.title] = db.session.query(Meal).filter(Meal.category_id == c.id).limit(3).all()
-    return render_template("main.html", categories=categories, meals=meals, food=food)
+    return render_template("main.html", categories=categories, meals=meals, food=food, cart=session.get("cart", {}))
 
 
 @app.route('/cart/')
 def render_cart():
     form = OrderForm()
-    return render_template("cart.html", form=form, items=session.get("cart",[]))
+    return render_template("cart.html", form=form, cart=session.get("cart", {}))
 
 
-@app.route('/addtocart/<int:id>/')
-def render_add_to_cart(id):
-    cart = session.get("cart", [])
-    cart.append(id)
+@app.route('/addtocart/<m_id>/<title>/<int:price>/')
+def render_add_to_cart(m_id, title, price):
+    cart = session.get("cart", {})
+    cart[m_id] = {"title": title, "price": price}
     session["cart"] = cart
-    return redirect("/cart/")
+    return redirect(url_for("render_cart"))
 
 
-@app.route('/deletefromcart/<int:id>/')
-def render_delete_from_cart(id):
-    cart = session.get("cart", [])
-    cart.remove(id)
+@app.route('/deletefromcart/<m_id>/')
+def render_delete_from_cart(m_id):
+    cart = session.get("cart", {})
+    if cart.get(m_id):
+        cart.pop(m_id)
     session["cart"] = cart
-    return redirect("/cart/")
+    return redirect(url_for("render_cart", deleted=True))
 
 
 @app.route('/account/')
@@ -67,7 +68,6 @@ def render_register():
         username = request.form.get("username")
         email = request.form.get("email")
         password = request.form.get("password")
-        print('hey')
         if not username or not password or not email:
             error_msg = "Не все поля заполнены"
             return render_template("register.html", form=form, error_msg=error_msg)
@@ -83,12 +83,10 @@ def render_login():
     if session.get("user_id"):
         return render_template('main.html')
     error_msg = ""
-    print('no redirect!')
     if request.method == "POST":
         email = request.form.get("inputEmail")
         password = request.form.get("inputPassword")
         user = User.query.filter(User.email == email).first()
-        print('----------------->OK')
         if user and user.password == password:
             session['user_id'] = user.id
             session['is_auth'] = True
@@ -118,7 +116,8 @@ def add_to_cart(item):
 @app.route('/reset/')
 def reset_cart():
     # удаляем корзину из сессии
-    session.pop("cart")
+    if session.get("cart"):
+        session.pop("cart")
     return "Cart is empty!"
 
 
