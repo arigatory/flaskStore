@@ -12,6 +12,7 @@ class RegisterForm(FlaskForm):
     username = StringField("Имя:", validators=[DataRequired()])
     email = StringField("Email:", validators=[DataRequired(), Email()])
     password = PasswordField("Пароль:", validators=[DataRequired()])
+    password_check = PasswordField("Повторите пароль:", validators=[DataRequired()])
 
 
 class OrderForm(FlaskForm):

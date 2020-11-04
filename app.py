@@ -39,7 +39,8 @@ def render_cart():
         if form.validate_on_submit():
             return render_template("ordered.html")
         redirect(url_for("reset_cart"))
-    return render_template("cart.html", form=form, cart=session.get("cart", {}))
+    deleted = request.args.get("deleted")
+    return render_template("cart.html", form=form, cart=session.get("cart", {}), deleted=deleted)
 
 
 @app.route('/addtocart/<m_id>/<title>/<int:price>/')
@@ -75,7 +76,8 @@ def render_register():
         if not username or not password or not email:
             error_msg = "Не все поля заполнены"
             return render_template("register.html", form=form, error_msg=error_msg)
-        user = User(name=username, email=email, password=password)
+        user = User(name=username, email=email)
+        user.password = password
         db.session.add(user)
         db.session.commit()
         return f"{user.name}: Успешная регистрация"
@@ -91,7 +93,7 @@ def render_login():
         email = request.form.get("inputEmail")
         password = request.form.get("inputPassword")
         user = User.query.filter(User.email == email).first()
-        if user and user.password == password:
+        if user and user.password_valid(password):
             session['user_id'] = user.id
             session['is_auth'] = True
             return redirect(url_for('render_main', cart=session.get("cart", {})))
