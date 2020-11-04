@@ -32,9 +32,13 @@ def render_main():
     return render_template("main.html", categories=categories, meals=meals, food=food, cart=session.get("cart", {}))
 
 
-@app.route('/cart/')
+@app.route('/cart/', methods=["GET", "POST"])
 def render_cart():
     form = OrderForm()
+    if request.method == "POST":
+        if form.validate_on_submit():
+            return render_template("ordered.html")
+        redirect(url_for("reset_cart"))
     return render_template("cart.html", form=form, cart=session.get("cart", {}))
 
 
@@ -81,7 +85,7 @@ def render_register():
 @app.route('/login/', methods=["GET", "POST"])
 def render_login():
     if session.get("user_id"):
-        return render_template('main.html')
+        return redirect(url_for('render_main', cart=session.get("cart", {})))
     error_msg = ""
     if request.method == "POST":
         email = request.form.get("inputEmail")
@@ -90,12 +94,12 @@ def render_login():
         if user and user.password == password:
             session['user_id'] = user.id
             session['is_auth'] = True
-            return redirect("/")
+            return redirect(url_for('render_main', cart=session.get("cart", {})))
         else:
             error_msg += "Неверное имя или пароль"
             return error_msg
 
-    return render_template("login.html")
+    return render_template("login.html", cart=session.get("cart"))
 
 
 @app.route('/logout/')
