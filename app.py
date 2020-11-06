@@ -1,10 +1,15 @@
 from flask_migrate import Migrate
-from flask import Flask, render_template, session, redirect, request, url_for
+from flask import Flask, render_template, session, redirect, request, url_for, g, flash, Markup
+from flask_wtf.csrf import CSRFProtect
+
 from config import Config
 from models import db, User, Category, Meal
 from forms import LoginForm, RegisterForm, OrderForm
+from werkzeug.datastructures import MultiDict
 
 print('app has been run')
+
+
 
 
 def create_app():
@@ -15,32 +20,43 @@ def create_app():
 
 
 app = create_app()
+csrf = CSRFProtect()
+csrf.init_app(app)
 migrate = Migrate(app, db)
 
 
 @app.route('/')
 @app.route('/index/')
 def render_main():
-    if not session.get('user_id'):
-        print('not is user_id!')
-        return redirect('/login/')
+    # if not session.get('user_id'):
+    #     return redirect('/login/')
+
     categories = db.session.query(Category).all()
     meals = db.session.query(Meal).filter(Meal.category_id == 1).limit(3).all()
     food = {}
     for c in categories:
         food[c.title] = db.session.query(Meal).filter(Meal.category_id == c.id).limit(3).all()
-    return render_template("main.html", categories=categories, meals=meals, food=food, cart=session.get("cart", {}))
+    return render_template("main.html", authorized=session.get('user_id'), categories=categories, meals=meals, food=food, cart=session.get("cart", {}))
 
 
 @app.route('/cart/', methods=["GET", "POST"])
-def render_cart():
+def cart():
+    user = User()
+    if session.get('user_id'):
+        user = User.query.filter_by(id=int(session.get('user_id'))).first()
+    else:
+        flash(Markup("Чтобы сделать заказ – <a href='/login/'>войдите</a> или <a "
+                     "href='/register/'>зарегистрируйтесь</a>"), 'warning')
+    # form = OrderForm(formdata=MultiDict({"name": user.name, "email": user.email, "phone": "+7", "address": "Москва, ул."}))
     form = OrderForm()
-    if request.method == "POST":
-        if form.validate_on_submit():
-            return render_template("ordered.html")
-        redirect(url_for("reset_cart"))
-    deleted = request.args.get("deleted")
-    return render_template("cart.html", form=form, cart=session.get("cart", {}), deleted=deleted)
+    if form.validate_on_submit():
+        # create order and insert to DB
+        flash("Заказ был успешно сделан!", 'success')
+        return render_template("ordered.html")
+        # redirect(url_for("reset_cart"))
+    if form.errors:
+        flash("{}".format(form.errors), 'danger')
+    return render_template("cart.html", form=form, cart=session.get("cart", {}), user=user)
 
 
 @app.route('/addtocart/<m_id>/<title>/<int:price>/')
@@ -48,7 +64,8 @@ def render_add_to_cart(m_id, title, price):
     cart = session.get("cart", {})
     cart[m_id] = {"title": title, "price": price}
     session["cart"] = cart
-    return redirect(url_for("render_cart"))
+    flash("Блюдо {} успешно добавлено в корзину!".format(title), 'success')
+    return redirect(url_for("cart"))
 
 
 @app.route('/deletefromcart/<m_id>/')
@@ -56,13 +73,14 @@ def render_delete_from_cart(m_id):
     cart = session.get("cart", {})
     if cart.get(m_id):
         cart.pop(m_id)
+        flash("Блюдо было удалено из корзины", 'success')
     session["cart"] = cart
-    return redirect(url_for("render_cart", deleted=True))
+    return redirect(url_for("cart"))
 
 
 @app.route('/account/')
 def render_account():
-    return render_template("account.html")
+    return render_template("account.html", cart=session.get('cart',{}))
 
 
 @app.route('/register/', methods=["GET", "POST"])
@@ -86,6 +104,7 @@ def render_register():
 
 @app.route('/login/', methods=["GET", "POST"])
 def render_login():
+    form = LoginForm()
     if session.get("user_id"):
         return redirect(url_for('render_main', cart=session.get("cart", {})))
     error_msg = ""
@@ -101,7 +120,7 @@ def render_login():
             error_msg += "Неверное имя или пароль"
             return error_msg
 
-    return render_template("login.html", cart=session.get("cart"))
+    return render_template("login.html", cart=session.get("cart"), form=form)
 
 
 @app.route('/logout/')

@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, DateField, SubmitField
-from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Email
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Email, InputRequired
 
 
 class LoginForm(FlaskForm):
@@ -17,7 +17,7 @@ class RegisterForm(FlaskForm):
 
 class OrderForm(FlaskForm):
     name = StringField("Ваше имя")
-    mail = StringField("Email:", validators=[DataRequired(), Email()])
-    phone = StringField("Телефон:", validators=[DataRequired(), Length(min=9)])
+    email = StringField("Email:", validators=[InputRequired(), Email()])
+    phone = StringField("Телефон:", validators=[DataRequired("Требуется ввести телефон"), InputRequired()])
     address = StringField("Адрес")
     submit = SubmitField('Оформить заказ')
