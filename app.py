@@ -28,7 +28,8 @@ def render_main():
     food = {}
     for c in categories:
         food[c.title] = db.session.query(Meal).filter(Meal.category_id == c.id).limit(3).all()
-    return render_template("main.html", authorized=session.get('user_id'), categories=categories, meals=meals, food=food, cart=session.get("cart", {}))
+    return render_template("main.html", authorized=session.get('user_id'),
+                           categories=categories, meals=meals, food=food, cart=session.get("cart", {}))
 
 
 @app.route('/cart/', methods=["GET", "POST"])
@@ -41,7 +42,7 @@ def cart():
                      "href='/register/'>зарегистрируйтесь</a>"), 'warning')
     form = OrderForm()
     if form.validate_on_submit():
-        ids = list(map(int,session.get('cart', {}).keys()))
+        ids = list(map(int, session.get('cart', {}).keys()))
         meals = db.session.query(Meal).filter(Meal.id.in_(ids)).all()
         order = Order(date=date.today(), mail=form.email.data, user_id=user.id)
         for meal in meals:
