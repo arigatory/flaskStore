@@ -1,14 +1,13 @@
 import locale
 from datetime import date
 
-from flask_migrate import Migrate
-from flask import Flask, render_template, session, redirect, request, url_for, g, flash, Markup
+import flask_migrate
+from flask import Flask, render_template, session, redirect, request, url_for, flash, Markup
 from flask_wtf.csrf import CSRFProtect
 
 from config import Config
 from models import db, User, Category, Meal, Order
 from forms import LoginForm, RegisterForm, OrderForm
-from werkzeug.datastructures import MultiDict
 
 print('app has been run')
 
@@ -25,7 +24,7 @@ def create_app():
 app = create_app()
 csrf = CSRFProtect()
 csrf.init_app(app)
-migrate = Migrate(app, db)
+migrate = flask_migrate.Migrate(app, db)
 
 
 @app.route('/')
@@ -33,7 +32,6 @@ migrate = Migrate(app, db)
 def render_main():
     # if not session.get('user_id'):
     #     return redirect('/login/')
-
     categories = db.session.query(Category).all()
     meals = db.session.query(Meal).filter(Meal.category_id == 1).limit(3).all()
     food = {}
