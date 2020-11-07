@@ -1,4 +1,3 @@
-import locale
 from datetime import date
 
 import flask_migrate
@@ -28,8 +27,6 @@ migrate = flask_migrate.Migrate(app, db)
 @app.route('/')
 @app.route('/index/')
 def render_main():
-    # if not session.get('user_id'):
-    #     return redirect('/login/')
     categories = db.session.query(Category).all()
     meals = db.session.query(Meal).filter(Meal.category_id == 1).limit(3).all()
     food = {}
@@ -46,7 +43,6 @@ def cart():
     else:
         flash(Markup("Чтобы сделать заказ – <a href='/login/'>войдите</a> или <a "
                      "href='/register/'>зарегистрируйтесь</a>"), 'warning')
-    # form = OrderForm(formdata=MultiDict({"name": user.name, "email": user.email, "phone": "+7", "address": "Москва, ул."}))
     form = OrderForm()
     if form.validate_on_submit():
         ids = list(map(int,session.get('cart', {}).keys()))
@@ -57,8 +53,8 @@ def cart():
         db.session.add(order)
         db.session.commit()
         flash("Заказ был успешно сделан!", 'success')
+        session.pop('cart')
         return render_template("ordered.html")
-        # redirect(url_for("reset_cart"))
     if form.errors:
         flash("{}".format(form.errors), 'danger')
     return render_template("cart.html", form=form, cart=session.get("cart", {}), user=user)
@@ -150,15 +146,9 @@ def add_to_cart(item):
 
 @app.route('/reset/')
 def reset_cart():
-    # удаляем корзину из сессии
     if session.get("cart"):
         session.pop("cart")
     return "Cart is empty!"
-
-
-@app.route('/auth/')
-def auth():
-    return render_template('auth.html')
 
 
 if __name__ == '__main__':
