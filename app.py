@@ -12,8 +12,6 @@ from forms import LoginForm, RegisterForm, OrderForm
 print('app has been run')
 
 
-locale.setlocale(locale.LC_TIME, "ru_RU")
-
 def create_app():
     res = Flask(__name__)
     res.config.from_object(Config)
