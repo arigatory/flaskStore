@@ -1,14 +1,10 @@
 from datetime import date
-
 import flask_migrate
 from flask import Flask, render_template, session, redirect, request, url_for, flash, Markup
 from flask_wtf.csrf import CSRFProtect
-
 from config import Config
 from models import db, User, Category, Meal, Order
 from forms import LoginForm, RegisterForm, OrderForm
-
-print('app has been run')
 
 
 def create_app():
@@ -53,7 +49,7 @@ def cart():
         db.session.add(order)
         db.session.commit()
         flash("Заказ был успешно сделан!", 'success')
-        session.pop('cart')
+        session['cart'] = {}
         return render_template("ordered.html")
     if form.errors:
         flash("{}".format(form.errors), 'danger')
@@ -126,7 +122,7 @@ def render_login():
             error_msg += "Неверное имя или пароль"
             return error_msg
 
-    return render_template("login.html", cart=session.get("cart"), form=form)
+    return render_template("login.html", cart=session.get("cart", {}), form=form)
 
 
 @app.route('/logout/')
