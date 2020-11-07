@@ -1,16 +1,19 @@
+import locale
+from datetime import date
+
 from flask_migrate import Migrate
 from flask import Flask, render_template, session, redirect, request, url_for, g, flash, Markup
 from flask_wtf.csrf import CSRFProtect
 
 from config import Config
-from models import db, User, Category, Meal
+from models import db, User, Category, Meal, Order
 from forms import LoginForm, RegisterForm, OrderForm
 from werkzeug.datastructures import MultiDict
 
 print('app has been run')
 
 
-
+locale.setlocale(locale.LC_TIME, "ru_RU")
 
 def create_app():
     res = Flask(__name__)
@@ -50,7 +53,13 @@ def cart():
     # form = OrderForm(formdata=MultiDict({"name": user.name, "email": user.email, "phone": "+7", "address": "Москва, ул."}))
     form = OrderForm()
     if form.validate_on_submit():
-        # create order and insert to DB
+        ids = list(map(int,session.get('cart', {}).keys()))
+        meals = db.session.query(Meal).filter(Meal.id.in_(ids)).all()
+        order = Order(date=date.today(), mail=form.email.data, user_id=user.id)
+        for meal in meals:
+            order.meals.append(meal)
+        db.session.add(order)
+        db.session.commit()
         flash("Заказ был успешно сделан!", 'success')
         return render_template("ordered.html")
         # redirect(url_for("reset_cart"))
@@ -80,7 +89,12 @@ def render_delete_from_cart(m_id):
 
 @app.route('/account/')
 def render_account():
-    return render_template("account.html", cart=session.get('cart',{}))
+    uid = session.get('user_id')
+    if not uid:
+        return redirect('/login/')
+    user = User.query.filter_by(id=uid).first()
+    print(user.name)
+    return render_template("account.html", cart=session.get('cart', {}), orders=user.orders)
 
 
 @app.route('/register/', methods=["GET", "POST"])
@@ -144,20 +158,6 @@ def reset_cart():
     if session.get("cart"):
         session.pop("cart")
     return "Cart is empty!"
-
-
-@app.route('/dark/')
-def dark_on():
-    session['dark'] = True
-    return '<body bgcolor={}><a href="/">INDEX</a><a href="/dark">Темную вкл</a><br><a href="/white">Темную ' \
-           'выкл</a></body>'.format('#000' if session['dark'] else '#fff')
-
-
-@app.route('/white/')
-def dark_off():
-    session['dark'] = False
-    return '<body bgcolor={}><a href="/">INDEX</a><a href="/dark">Темную вкл</a><br><a href="/white">Темную ' \
-           'выкл</a></body>'.format('#000' if session['dark'] else '#fff')
 
 
 @app.route('/auth/')

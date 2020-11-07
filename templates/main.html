@@ -2,44 +2,38 @@
 {% set active_page = 'main' %}
 
 
-{% block menu %}
-    {% include "menu.html" %}
-{% endblock %}
-{% block container %}
-    <main class="container mt-3">
+
+{% block content %}
     <section class="my-5 jumbotron jumbotron-fluid">
-      <div class="text-center">
-        <img class="ml-2" src="/static/pictures/main.png" alt="" height="150">
-        <h1 class="h2 mt-5 m-2">Всякая еда, чтобы кушать.</h1>
-        <h2 class="h3">Прилетит к вам сама</h2>
-        <p class="pt-4">Доставка дронами</p>
-      </div>
+        <div class="text-center">
+            <img class="ml-2" src="/static/pictures/main.png" alt="" height="150">
+            <h1 class="h2 mt-5 m-2">Всякая еда, чтобы кушать.</h1>
+            <h2 class="h3">Прилетит к вам сама</h2>
+            <p class="pt-4">Доставка дронами</p>
+        </div>
     </section>
     {% for category,meals in food.items() %}
         <section>
-        <h3 class="my-4">{{category}}</h3>
-          <div class="row mt-4">
-              {% for meal in meals %}
-                  <div class="col-12 col-md-4">
-                      <div class="card mb-3">
-                        <img src='/static/pictures/{{ meal.picture }}' width="300" height="200" class="card-img-top" alt="">
-                        <div class="card-body">
-                            <div class="row ">
-                                <h5 class="col-6 card-title">{{ meal.title }}</h5>
-                                <h5 class="col-6 card-title text-right">{{ meal.price }} Р</h5>
+            <h3 class="my-4">{{ category }}</h3>
+            <div class="row mt-4">
+                {% for meal in meals %}
+                    <div class="col-12 col-md-4">
+                        <div class="card mb-3">
+                            <img src='/static/pictures/{{ meal.picture }}' width="300" height="200"
+                                 class="card-img-top" alt="">
+                            <div class="card-body">
+                                <div class="row ">
+                                    <h5 class="col-6 card-title">{{ meal.title }}</h5>
+                                    <h5 class="col-6 card-title text-right">{{ meal.price }} Р</h5>
+                                </div>
+                                <p class="card-text">{{ meal.description | truncate(100) }}</p>
+                                <a href="/addtocart/{{ meal.id }}/{{ meal.title }}/{{ meal.price }}/"
+                                   class="btn btn-danger">В корзину</a>
                             </div>
-                          <p class="card-text">{{ meal.description | truncate(100) }}</p>
-                          <a href="/addtocart/{{ meal.id }}/{{ meal.title }}/{{ meal.price }}/" class="btn btn-danger">В корзину</a>
                         </div>
-                      </div>
-                  </div>
-              {% endfor %}
-          </div>
+                    </div>
+                {% endfor %}
+            </div>
         </section>
     {% endfor %}
-    </main>
-{% endblock %}
-
-{% block footer %}
-    {% include 'footer.html' %}
 {% endblock %}

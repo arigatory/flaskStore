@@ -2,12 +2,7 @@
 {% set active_page = 'cart' %}
 {% block title %}Корзина - {% endblock %}
 
-
-
-{% block menu %}
-    {% include "menu.html" %}
-{% endblock %}
-{% block container %}
+{% block content %}
 <main class="container">
     <h1 class="h3 my-4">Корзина</h1>
     <div class="row mt-5">
@@ -60,7 +55,4 @@
     </div>
     </div>
 </main>
-{% endblock %}
-{% block footer %}
-    {% include "footer.html" %}
 {% endblock %}
