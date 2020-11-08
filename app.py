@@ -5,6 +5,8 @@ from flask_wtf.csrf import CSRFProtect
 from config import Config
 from models import db, User, Category, Meal, Order
 from forms import LoginForm, RegisterForm, OrderForm
+from flask_admin import Admin;
+from flask_admin.contrib.sqla import ModelView
 
 
 def create_app():
@@ -18,6 +20,12 @@ app = create_app()
 csrf = CSRFProtect()
 csrf.init_app(app)
 migrate = flask_migrate.Migrate(app, db)
+admin = Admin(app)
+
+admin.add_view(ModelView(User, db.session))
+admin.add_view(ModelView(Category, db.session))
+admin.add_view(ModelView(Meal, db.session))
+admin.add_view(ModelView(Order, db.session))
 
 
 @app.route('/')
